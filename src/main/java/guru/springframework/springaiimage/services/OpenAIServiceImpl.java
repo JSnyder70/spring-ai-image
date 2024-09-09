@@ -2,13 +2,12 @@ package guru.springframework.springaiimage.services;
 
 import guru.springframework.springaiimage.model.Question;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.ChatClient;
 import org.springframework.ai.chat.messages.Media;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.image.ImagePrompt;
+import org.springframework.ai.openai.OpenAiImageModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.OpenAiImageClient;
 import org.springframework.ai.openai.OpenAiImageOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Service;
@@ -26,9 +25,8 @@ import java.util.List;
 @Service
 public class OpenAIServiceImpl implements OpenAIService {
 
-    final OpenAiImageClient imageClient;
-    final ChatClient chatClient;
-
+    final OpenAiImageModel imageModel;
+    final ChatModel chatModel;
     @Override
     public String getDescription(MultipartFile file) throws IOException {
         OpenAiChatOptions chatOptions = OpenAiChatOptions.builder()
@@ -39,7 +37,7 @@ public class OpenAIServiceImpl implements OpenAIService {
                 "Explain what do you see in this picture?", // content
                 List.of(new Media(MimeTypeUtils.IMAGE_JPEG, file.getBytes()))); // media
 
-        return chatClient.call(new Prompt(List.of(userMessage), chatOptions)).getResult().getOutput().toString();
+        return chatModel.call(new Prompt(List.of(userMessage), chatOptions)).getResult().getOutput().toString();
     }
 
     @Override
@@ -55,7 +53,7 @@ public class OpenAIServiceImpl implements OpenAIService {
 
         ImagePrompt imagePrompt = new ImagePrompt(question.question(), options);
 
-        var imageResponse = imageClient.call(imagePrompt);
+        var imageResponse = imageModel.call(imagePrompt);
 
         return Base64.getDecoder().decode(imageResponse.getResult().getOutput().getB64Json());
     }
